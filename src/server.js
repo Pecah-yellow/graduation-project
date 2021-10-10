@@ -16,16 +16,18 @@ const handleListen = () => console.log(`http://localhost:3000 연결`);
 const server = http.createServer(app);
 const wss = new WebSocket.Server( {server} ); //websocket 서버 생성
 
+const backSockets = [];
+
 wss.on("connection", (backSocket) => {
+    backSockets.push(backSocket);
+
     console.log("브라우저와 연결되었습니다.✔");
 
     backSocket.on("close",() => console.log("브라우저와 연결이 해제되었습니다.❌"))
    
-    backSocket.on("message", (messege)=> {
-        console.log(messege.toString('utf-8'));
+    backSocket.on("message", (message)=> {
+        backSockets.forEach((anotherSocket) => anotherSocket.send(message.toString()))
     });
-    backSocket.send("Hello!");
-    //console.log(backSocket);
 });
 
 server.listen(3000, handleListen);

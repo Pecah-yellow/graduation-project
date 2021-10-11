@@ -21,12 +21,20 @@ const backSockets = [];
 wss.on("connection", (backSocket) => {
     backSockets.push(backSocket);
 
+    backSocket["nickname"] = "익명";
+
     console.log("브라우저와 연결되었습니다.✔");
 
     backSocket.on("close",() => console.log("브라우저와 연결이 해제되었습니다.❌"))
    
-    backSocket.on("message", (message)=> {
-        backSockets.forEach((anotherSocket) => anotherSocket.send(message.toString()))
+    backSocket.on("message", (msg)=> {
+        const message = JSON.parse(msg);
+        switch(message.type){
+            case "new_message":
+                backSockets.forEach((anotherSocket) => anotherSocket.send(`${backSocket.nickname}: ${message.payload}`))
+            case "nickname":
+                backSocket["nickname"] = message.payload;
+        }
     });
 });
 

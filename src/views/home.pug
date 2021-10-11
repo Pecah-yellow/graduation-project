@@ -10,9 +10,12 @@ html(lang="en")
         header 
             h1 HELLO!
         main 
+            form#nickname
+                input(type="text", placeholder="choose a nickname", required)
+                button Save
             ul 
-            form
-                input(type="text", placerholder="write a message", required)
+            form#message
+                input(type="text", placeholder="write a massge", required)
                 button Send
                 
         script(src="public/js/app.js") 

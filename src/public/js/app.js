@@ -33,8 +33,9 @@ function handelNicknameSubimt(event) {
 function showRoom() {
   welcome.hidden = true;
   room.hidden = false;
+
   const h3 = room.querySelector("h3");
-  h3.innerText = `Room ${roomName}`;
+  h3.innerText = `Room :  ${roomName}`;
   const msgForm = room.querySelector("#msg");
   const nameForm = room.querySelector("#name");
   msgForm.addEventListener("submit", handleMessageSubmit);
@@ -60,6 +61,19 @@ frontSocket.on("bye", (userLeft) => {
 });
 
 frontSocket.on("new_message", addMessage);
+
+frontSocket.on("room_change", (rooms) => {
+  const roomList = welcome.querySelector("ul");
+  roomList.innerHTML = "";
+  if (rooms.length === 0) {
+    return;
+  }
+  rooms.forEach((room) => {
+    const li = document.createElement("li");
+    li.innerText = room;
+    roomList.append(li);
+  });
+});
 /*const messageList = document.querySelector("ul");
 const nicknameForm = document.querySelector("#nickname");
 const messageForm = document.querySelector("#message");

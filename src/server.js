@@ -13,6 +13,21 @@ app.get("/*", (req, res) => res.redirect("/"));
 const httpServer = http.createServer(app);
 const wsServer = SocketIo(httpServer);
 
+function publicRooms() {
+  const {
+    sockets: {
+      adapter: { sids, rooms },
+    },
+  } = wsServer;
+  const publicRooms = [];
+  rooms.forEach((_, key) => {
+    if (sids.get(key) === undefined) {
+      publicRooms.push(key);
+    }
+  });
+  return publicRooms;
+}
+
 wsServer.on("connection", (backSocket) => {
   backSocket["nickname"] = "익명";
 
@@ -24,6 +39,7 @@ wsServer.on("connection", (backSocket) => {
     backSocket.join(roomName);
     showRoom();
     backSocket.to(roomName).emit("welcome", backSocket.nickname);
+    wsServer.sockets.emit("room_change", publicRooms());
   });
 
   backSocket.on("disconnecting", () => {
@@ -31,7 +47,9 @@ wsServer.on("connection", (backSocket) => {
       backSocket.to(room).emit("bye", backSocket.nickname)
     );
   });
-
+  backSocket.on("disconnect", () => {
+    wsServer.sockets.emit("room_change", publicRooms());
+  });
   backSocket.on("new_message", (messaage, room, showMessage) => {
     backSocket
       .to(room)

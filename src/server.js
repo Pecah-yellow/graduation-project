@@ -1,7 +1,6 @@
 import http from "http";
-import WebSocket from "ws";
-import express from"express";
-import { Socket } from 'dgram';
+import SocketIo, { Socket } from "socket.io";
+import express from "express";
 
 const app = express();
 
@@ -11,9 +10,39 @@ app.use("/public", express.static(__dirname + "/public"));
 app.get("/", (req, res) => res.render("home"));
 app.get("/*", (req, res) => res.redirect("/"));
 
-const handleListen = () => console.log(`http://localhost:3000 연결`);
- 
-const server = http.createServer(app);
+const httpServer = http.createServer(app);
+const wsServer = SocketIo(httpServer);
+
+wsServer.on("connection", (backSocket) => {
+  backSocket["nickname"] = "익명";
+
+  backSocket.onAny((event) => {
+    console.log(`Socket Event : ${event}`);
+  });
+
+  backSocket.on("enter_room", (roomName, showRoom) => {
+    backSocket.join(roomName);
+    showRoom();
+    backSocket.to(roomName).emit("welcome", backSocket.nickname);
+  });
+
+  backSocket.on("disconnecting", () => {
+    backSocket.rooms.forEach((room) =>
+      backSocket.to(room).emit("bye", backSocket.nickname)
+    );
+  });
+
+  backSocket.on("new_message", (messaage, room, showMessage) => {
+    backSocket
+      .to(room)
+      .emit("new_message", `${backSocket.nickname} : ${messaage}`);
+    showMessage();
+  });
+
+  backSocket.on("nickname", (nickname) => (backSocket["nickname"] = nickname));
+});
+
+/*
 const wss = new WebSocket.Server( {server} ); //websocket 서버 생성
 
 const backSockets = [];
@@ -37,5 +66,6 @@ wss.on("connection", (backSocket) => {
         }
     });
 });
-
-server.listen(3000, handleListen);
+*/
+const handleListen = () => console.log(`http://localhost:3000 연결`);
+httpServer.listen(3000, handleListen);

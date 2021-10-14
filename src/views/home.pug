@@ -10,21 +10,11 @@ html(lang="en")
         header 
             h1 HELLO!
         main
-            div#welcome               
-                form
-                    input(placeholder="room name", required, type="text")
-                    button Enter Room   
-                h4 open rooms :
-                ul                                    
-            div#room
-                h3
-                ul
-                form#name
-                    input(placeholder="name", required, type="text")
-                    button Save                 
-                form#msg
-                    input(placeholder="message", required, type="text")
-                    button Send
-
+            div#myStream
+                video#myFace(autoplay,playsinline,width="400",height="400") //-비디오 속성 추가
+            button#mute 음소거
+            button#camera 카메라 끄기
+            select#cameras
+                
         script(src="socket.io/socket.io.js")    
         script(src="public/js/app.js") 

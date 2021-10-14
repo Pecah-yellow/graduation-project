@@ -28,6 +28,10 @@ function publicRooms() {
   return publicRooms;
 }
 
+function countRoom(roomName) {
+  return wsServer.sockets.adapter.rooms.get(roomName)?.size;
+}
+
 wsServer.on("connection", (backSocket) => {
   backSocket["nickname"] = "익명";
 
@@ -38,13 +42,15 @@ wsServer.on("connection", (backSocket) => {
   backSocket.on("enter_room", (roomName, showRoom) => {
     backSocket.join(roomName);
     showRoom();
-    backSocket.to(roomName).emit("welcome", backSocket.nickname);
+    backSocket
+      .to(roomName)
+      .emit("welcome", backSocket.nickname, countRoom(roomName));
     wsServer.sockets.emit("room_change", publicRooms());
   });
 
   backSocket.on("disconnecting", () => {
     backSocket.rooms.forEach((room) =>
-      backSocket.to(room).emit("bye", backSocket.nickname)
+      backSocket.to(room).emit("bye", backSocket.nickname, countRoom(room) - 1)
     );
   });
   backSocket.on("disconnect", () => {
@@ -60,30 +66,5 @@ wsServer.on("connection", (backSocket) => {
   backSocket.on("nickname", (nickname) => (backSocket["nickname"] = nickname));
 });
 
-/*
-const wss = new WebSocket.Server( {server} ); //websocket 서버 생성
-
-const backSockets = [];
-
-wss.on("connection", (backSocket) => {
-    backSockets.push(backSocket);
-
-    backSocket["nickname"] = "익명";
-
-    console.log("브라우저와 연결되었습니다.✔");
-
-    backSocket.on("close",() => console.log("브라우저와 연결이 해제되었습니다.❌"))
-   
-    backSocket.on("message", (msg)=> {
-        const message = JSON.parse(msg);
-        switch(message.type){
-            case "new_message":
-                backSockets.forEach((anotherSocket) => anotherSocket.send(`${backSocket.nickname}: ${message.payload}`))
-            case "nickname":
-                backSocket["nickname"] = message.payload;
-        }
-    });
-});
-*/
 const handleListen = () => console.log(`http://localhost:3000 연결`);
 httpServer.listen(3000, handleListen);

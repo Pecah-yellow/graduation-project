@@ -1,44 +1,64 @@
 const frontSocket = io();
 
+//화상통화에 관한 부분
 const myFace = document.getElementById("myFace"); //비디오 속성 호출
 const muteButton = document.getElementById("mute"); //음소거
 const cameraButton = document.getElementById("camera"); //카메라 on/off버튼
 const camerasSelect = document.getElementById("cameras"); //카메라 리스트
+const call = document.getElementById("call");
+
+call.hidden = true;
+
 let myStream; //마이스트림 지정
 let muted = false; // 마이크 켜진채로 시작
 let cameraOff = false; //카메라 켜진채로 시작
+let roomName;
 
 async function getCameras() {
   //카메라 얻는 함수
   try {
     const devices = await navigator.mediaDevices.enumerateDevices(); //카메라 리스트
     const cameras = devices.filter((device) => device.kind === "videoinput");
+    const currentCamera = myStream.getVideoTracks()[0];
 
     cameras.forEach((camera) => {
       const option = document.createElement("option");
       option.value = camera.deviceId; //카메라의 벨류 = 카메라 디바이스 아이디
       option.innerText = camera.label; //카메라 보여주는 텍스트 = 카메라 라벨
+      if (currentCamera.label === camera.label) {
+        option.selected = true;
+        //현재 사용중인 카메라를 선택창에서 표시
+      }
       camerasSelect.appendChild(option);
     });
   } catch (e) {
     console.log(e);
   }
 }
-async function getMedia() {
+async function getMedia(deviceId) {
   //미디어 얻는 함수
+  const initialConstrains = {
+    // 초기설정, 디바이스 id 없을때 실행
+    audio: true,
+    video: { facingMode: "user" }, //전면카메라 기본설정
+  };
+  const cameraConstrains = {
+    //디바이스id가 있을때
+    audio: true,
+    video: { deviceId: { exact: deviceId } },
+  };
   try {
-    myStream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true,
-    });
+    myStream = await navigator.mediaDevices.getUserMedia(
+      deviceId ? cameraConstrains : initialConstrains //디바이스 id 있으면 cameraConstrains 없으면 initialConstrains
+    );
     myFace.srcObject = myStream;
-    await getCameras();
+    if (!deviceId) {
+      await getCameras();
+    }
   } catch (e) {
     console.log(e);
   }
 }
-
-getMedia();
 
 function handleMuteClick() {
   myStream
@@ -73,5 +93,37 @@ function handleCameraClick() {
     cameraOff = true;
   }
 }
+
+async function handleCameraChange() {
+  await getMedia(camerasSelect.value);
+}
+
 muteButton.addEventListener("click", handleMuteClick);
 cameraButton.addEventListener("click", handleCameraClick);
+camerasSelect.addEventListener("input", handleCameraChange);
+
+// 화상통화 방 입장에 관한 부분
+const welcome = document.getElementById("welcome");
+const welcomeForm = welcome.querySelector("form");
+
+function startMedia() {
+  welcome.hidden = true;
+  call.hidden = false;
+  getMedia();
+}
+
+function handleWelcomeSubmit(event) {
+  event.preventDefault();
+  const input = welcomeForm.querySelector("input");
+  frontSocket.emit("join_room", input.value, startMedia);
+  roomName = input.value;
+  input.value = "";
+}
+
+welcomeForm.addEventListener("submit", handleWelcomeSubmit);
+
+//소켓 부분
+
+frontSocket.on("welcome", () => {
+  console.log("누군가가 들어왔습니다.");
+});

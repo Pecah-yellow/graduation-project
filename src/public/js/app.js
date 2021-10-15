@@ -13,6 +13,7 @@ let myStream; //마이스트림 지정
 let muted = false; // 마이크 켜진채로 시작
 let cameraOff = false; //카메라 켜진채로 시작
 let roomName;
+let myPeerConnection;
 
 async function getCameras() {
   //카메라 얻는 함수
@@ -106,16 +107,18 @@ camerasSelect.addEventListener("input", handleCameraChange);
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
-function startMedia() {
+async function startCall() {
   welcome.hidden = true;
   call.hidden = false;
-  getMedia();
+  await getMedia();
+  makeConnection();
 }
 
-function handleWelcomeSubmit(event) {
+async function handleWelcomeSubmit(event) {
   event.preventDefault();
   const input = welcomeForm.querySelector("input");
-  frontSocket.emit("join_room", input.value, startMedia);
+  await startCall();
+  frontSocket.emit("join_room", input.value);
   roomName = input.value;
   input.value = "";
 }
@@ -124,6 +127,29 @@ welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 
 //소켓 부분
 
-frontSocket.on("welcome", () => {
-  console.log("누군가가 들어왔습니다.");
+frontSocket.on("welcome", async () => {
+  const offer = await myPeerConnection.createOffer(); //offer 생성
+  myPeerConnection.setLocalDescription(offer);
+  console.log("offer를 보냈습니다.");
+  frontSocket.emit("offer", offer, roomName); //offer 전달
+}); //선순위 브라우저 (peerA)
+
+frontSocket.on("offer", async (offer) => {
+  myPeerConnection.setRemoteDescription(offer);
+  const answer = await myPeerConnection.createAnswer();
+  myPeerConnection.setLocalDescription(answer);
+  frontSocket.emit("asnwer", answer, roomName);
+}); //후순위 브라우저 (peerB)
+
+frontSocket.on("answer", (answer) => {
+  myPeerConnection.setRemoteDescription(answer);
 });
+//WEB RTC
+
+function makeConnection() {
+  myPeerConnection = new RTCPeerConnection(); //커넥션 생성
+  myStream
+    .getTracks()
+    .forEach((track) => myPeerConnection.addTrack(track, myStream));
+  //커넥션 사이에 디바이스 적용
+}

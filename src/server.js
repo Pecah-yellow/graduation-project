@@ -14,10 +14,15 @@ const httpServer = http.createServer(app);
 const wsServer = SocketIo(httpServer);
 
 wsServer.on("connection", (backSocket) => {
-  backSocket.on("join_room", (roomName, done) => {
+  backSocket.on("join_room", (roomName) => {
     backSocket.join(roomName);
-    done();
     backSocket.to(roomName).emit("welcome");
+  });
+  backSocket.on("offer", (offer, roomName) => {
+    backSocket.to(roomName).emit("offer", offer);
+  });
+  backSocket.on("asnwer", (answer, roomName) => {
+    backSocket.to(roomName).emit("answer", answer);
   });
 });
 

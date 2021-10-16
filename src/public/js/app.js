@@ -14,6 +14,7 @@ let muted = false; // 마이크 켜진채로 시작
 let cameraOff = false; //카메라 켜진채로 시작
 let roomName;
 let myPeerConnection;
+let myDataChannel;
 
 async function getCameras() {
   //카메라 얻는 함수
@@ -136,6 +137,9 @@ welcomeForm.addEventListener("submit", handleWelcomeSubmit);
 //소켓 부분
 
 frontSocket.on("welcome", async () => {
+  myDataChannel = myPeerConnection.createDataChannel("chat"); //DataChannel 정의
+  myDataChannel.addEventListener("message", (event) => console.log(event.data));
+  console.log("Data Channel 을 만들었습니다.");
   const offer = await myPeerConnection.createOffer(); //offer 생성
   myPeerConnection.setLocalDescription(offer);
   console.log("offer를 보냈습니다.");
@@ -143,6 +147,12 @@ frontSocket.on("welcome", async () => {
 }); //선순위 브라우저 (peerA)
 
 frontSocket.on("offer", async (offer) => {
+  myPeerConnection.addEventListener("datachannel", (event) => {
+    myDataChannel = event.channel;
+    myDataChannel.addEventListener("message", (event) =>
+      console.log(event.data)
+    );
+  });
   console.log("offer를 받았습니다.");
   myPeerConnection.setRemoteDescription(offer);
   const answer = await myPeerConnection.createAnswer();
@@ -179,6 +189,7 @@ function makeConnection() {
   }); //커넥션 생성
   myPeerConnection.addEventListener("icecandidate", handleIce); //icecandidate 생성
   myPeerConnection.addEventListener("addstream", handleAddStream);
+
   myStream
     .getTracks()
     .forEach((track) => myPeerConnection.addTrack(track, myStream));

@@ -24,6 +24,9 @@ wsServer.on("connection", (backSocket) => {
   backSocket.on("asnwer", (answer, roomName) => {
     backSocket.to(roomName).emit("answer", answer);
   });
+  backSocket.on("ice", (ice, roomName) => {
+    backSocket.to(roomName).emit("ice", ice);
+  });
 });
 
 const handleListen = () => console.log(`http://localhost:3000 연결`);

@@ -97,6 +97,13 @@ function handleCameraClick() {
 
 async function handleCameraChange() {
   await getMedia(camerasSelect.value);
+  if (myPeerConnection) {
+    const videoTrack = myStream.getVideoTracks()[0];
+    const videoSender = myPeerConnection
+      .getSenders()
+      .find((sender) => sender.track.kind === "video");
+    videoSender.replaceTrack(videoTrack);
+  }
 }
 
 muteButton.addEventListener("click", handleMuteClick);
@@ -104,6 +111,7 @@ cameraButton.addEventListener("click", handleCameraClick);
 camerasSelect.addEventListener("input", handleCameraChange);
 
 // 화상통화 방 입장에 관한 부분
+
 const welcome = document.getElementById("welcome");
 const welcomeForm = welcome.querySelector("form");
 
@@ -135,21 +143,54 @@ frontSocket.on("welcome", async () => {
 }); //선순위 브라우저 (peerA)
 
 frontSocket.on("offer", async (offer) => {
+  console.log("offer를 받았습니다.");
   myPeerConnection.setRemoteDescription(offer);
   const answer = await myPeerConnection.createAnswer();
   myPeerConnection.setLocalDescription(answer);
   frontSocket.emit("asnwer", answer, roomName);
+  console.log("answer를 보냈습니다.");
 }); //후순위 브라우저 (peerB)
 
 frontSocket.on("answer", (answer) => {
+  console.log("answer를 받았습니다.");
   myPeerConnection.setRemoteDescription(answer);
 });
+
+frontSocket.on("ice", (ice) => {
+  console.log("candidate 를 받았습니다..");
+  myPeerConnection.addIceCandidate(ice);
+});
+
 //WEB RTC
 
 function makeConnection() {
-  myPeerConnection = new RTCPeerConnection(); //커넥션 생성
+  myPeerConnection = new RTCPeerConnection({
+    iceServers: [
+      {
+        urls: [
+          "stun:stun.l.google.com:19302",
+          "stun:stun1.l.google.com:19302",
+          "stun:stun2.l.google.com:19302",
+          "stun:stun3.l.google.com:19302",
+          "stun:stun4.l.google.com:19302",
+        ],
+      },
+    ],
+  }); //커넥션 생성
+  myPeerConnection.addEventListener("icecandidate", handleIce); //icecandidate 생성
+  myPeerConnection.addEventListener("addstream", handleAddStream);
   myStream
     .getTracks()
     .forEach((track) => myPeerConnection.addTrack(track, myStream));
   //커넥션 사이에 디바이스 적용
+}
+
+function handleIce(data) {
+  console.log("candidate 를 보냈습니다.");
+  frontSocket.emit("ice", data.candidate, roomName);
+}
+
+function handleAddStream(data) {
+  const peerFace = document.getElementById("peerFace");
+  peerFace.srcObject = data.stream;
 }

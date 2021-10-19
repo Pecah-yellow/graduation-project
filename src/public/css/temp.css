@@ -1,0 +1,53 @@
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  background-color: bisque;
+}
+h1 {
+  color: blueviolet;
+  font-family: Monospace;
+  font-weight: bold;
+  padding-bottom: 100px;
+}
+
+#roomForm {
+  border: solid brown;
+}
+#roomInput {
+  border: none;
+  padding: 12px;
+  background-color: bisque;
+}
+#roomButton {
+  padding: 12px;
+  border: none;
+  outline: none;
+  background-color: rgba(0, 0, 0, 0.3);
+  color: white;
+}
+select {
+  width: 30%;
+  padding: 5px 10px;
+  border: none;
+  background-color: white;
+  box-shadow: inset 6px 6px 6px rgba(0, 0, 0, 0.2);
+  margin-right: 5px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+#mute,
+#camera {
+  border: none;
+  outline: none;
+  background-color: lightpink;
+  border-radius: 8px;
+  padding: 0 10px;
+  margin: 0 10px;
+  font-weight: bold;
+  width: auto;
+}

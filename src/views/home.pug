@@ -17,11 +17,11 @@ html(lang="en")
             div#call
                 div#myStream
                     video#myFace(autoplay,playsinline, width="400", height="300")
-                    video#peerFace(autoplay,playsinline, width="400", height="300",style="margin-left: 30px")
+                    video#peerFace(autoplay,playsinline, width="400", height="300")
                 select#cameras
-                div.button
-                        button#mute 음소거                
-                        button#camera 카메라 끄기
+                div
+                    button#mute 음소거             
+                    button#camera 카메라 끄기
                 
         script(src="socket.io/socket.io.js")    
         script(src="public/js/app.js") 

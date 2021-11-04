@@ -36,6 +36,19 @@ async function getMedia(deviceId) {
   }
 }
 
+// async function getMedia(deviceId) {
+//   //비디오 화면, 오디오를 가져오는 함수
+//   try {
+//     myStream = await navigator.mediaDevices.getUserMedia({
+//       audio: true,
+//       video: true,
+//     });
+//     myFace.srcObject = myStream;
+//   } catch (error) {
+//     console.log(error);
+//   }
+// }
+
 function handleMuteClick() {
   myStream
     .getAudioTracks()

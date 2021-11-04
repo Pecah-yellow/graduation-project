@@ -29,14 +29,6 @@ h1 {
   background-color: green;
   color: white;
 }
-select {
-  width: auto;
-  padding: 5px 10px;
-  border: none;
-  box-shadow: inset 6px 6px 6px rgba(0, 0, 0, 0.2);
-  margin-bottom: 10px;
-  border-radius: 5px;
-}
 #mute,
 #camera {
   border: none;

@@ -12,30 +12,6 @@ let cameraOff = false; //카메라 켜진채로 시작
 let roomName;
 let myPeerConnection;
 
-async function getCameras() {
-  //카메라 리스트를 얻어서 변경하게 해주는 함수
-  try {
-    const devices = await navigator.mediaDevices.enumerateDevices(); //카메라 리스트
-    const cameras = devices.filter((device) => device.kind === "videoinput");
-    // 필터를 이용해서 카메라만 골라줌
-    const currentCamera = myStream.getVideoTracks()[0]; //현재 사용중인 카메라는 0번 카메라로
-
-    cameras.forEach((camera) => {
-      const option = document.createElement("option");
-      option.value = camera.deviceId; //옵션태그의 디바이스 = 카메라 디바이스 아이디
-      option.innerText = camera.label; //카메라 보여주는 텍스트 = 카메라 라벨
-      if (currentCamera.label === camera.label) {
-        option.selected = true;
-        //현재 사용중인 카메라를 선택창에서 표시
-      }
-      camerasSelect.appendChild(option);
-      //camerasSelect 안에 option태그 생성
-    });
-  } catch (error) {
-    console.log(error);
-  }
-}
-
 async function getMedia(deviceId) {
   //비디오 화면, 오디오를 가져오는 함수
   const initialConstrains = {
@@ -55,9 +31,6 @@ async function getMedia(deviceId) {
       //디바이스 id 있으면 cameraConstrains 없으면 initialConstrains
     );
     myFace.srcObject = myStream;
-    if (!deviceId) {
-      await getCameras();
-    } //카메라 선택이 증식하는것을 막아줌
   } catch (error) {
     console.log(error);
   }
@@ -98,23 +71,8 @@ function handleCameraClick() {
   }
 }
 
-async function handleCameraChange() {
-  await getMedia(camerasSelect.value);
-  if (myPeerConnection) {
-    const videoTrack = myStream.getVideoTracks()[0];
-    //내 카메라는 0번 카메라
-    const videoSender = myPeerConnection
-      .getSenders()
-      .find((sender) => sender.track.kind === "video");
-    //video 속성을 가진 sender를 찾아냄
-    videoSender.replaceTrack(videoTrack);
-    //바뀐 카메라로 전환해줌
-  }
-}
-
 muteButton.addEventListener("click", handleMuteClick);
 cameraButton.addEventListener("click", handleCameraClick);
-camerasSelect.addEventListener("input", handleCameraChange);
 
 // 화상통화 방 입장에 관한 부분
 
